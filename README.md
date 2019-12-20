@@ -13,7 +13,7 @@ composer require iprog/apollo-php
 
 ## 依赖
 
-- **PHP71** or later
+- **PHP7.2** or later
 
 
 ## 如何使用：
@@ -46,8 +46,6 @@ ApolloPhp\ApolloConfig::run(
 3、在其它地方获取配置：
 
 ```php
-// 用上面的配置获取配置
 $namespace = 'redis';
 ApolloPhp\ApolloConfig::get($config, $namespace);
-var_dump($namespace);
 ```
