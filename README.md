@@ -11,14 +11,10 @@
 composer require iprog/apollo-php
 ```
 
-------
-
 ## 依赖
 
 - **PHP71** or later
 
-------
-<br>
 
 ## 如何使用：
 
