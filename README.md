@@ -28,8 +28,8 @@ composer require iprog/apollo-php
 require '/app/xxx/vendor/autoload.php';                // 这里加载vendor的自动加载
 
 $config = [
-	'serverUrl' => 'http://172.17.18.211:38080',       // apollo的服务器地址
-	'appId'     => 'event-analysis-1',                 // apollo上的appid
+    'serverUrl' => 'http://172.17.18.211:38080',       // apollo的服务器地址
+    'appId'     => 'event-analysis-1',                 // apollo上的appid
     'cluster'   => 'default',                          // apollo上的cluster
     'namespaces'=> ['mysql', 'redis'],                 // apollo上的命名空间
     'configPath'=> '/mnt/d/apollo-php/config',         // php应用的配置文件目录
@@ -48,8 +48,8 @@ ApolloPhp\ApolloConfig::run(
 require '/app/xxx/vendor/autoload.php';                // 这里加载vendor的自动加载
 
 $config = [
-	'serverUrl' => 'http://172.17.18.211:38080',       // apollo的服务器地址
-	'appId'     => 'event-analysis-1',                 // apollo上的appid
+    'serverUrl' => 'http://172.17.18.211:38080',       // apollo的服务器地址
+    'appId'     => 'event-analysis-1',                 // apollo上的appid
     'cluster'   => 'default',                          // apollo上的cluster
     'namespaces'=> ['mysql', 'redis'],                 // apollo上的命名空间
     'configPath'=> '/mnt/d/apollo-php/config',         // php应用的配置文件目录
