@@ -5,8 +5,6 @@
 
 ## 安装
 
-最好的安装方法是通过 [Composer](http://getcomposer.org/) 包管理器 :
-
 ```shell
 composer require iprog/apollo-php
 ```
@@ -14,6 +12,7 @@ composer require iprog/apollo-php
 ## 依赖
 
 - **PHP7.2** or later
+<br>
 
 
 ## 如何使用：

@@ -3,7 +3,7 @@ namespace ApolloPhp;
 
 class ApolloClient
 {
-    public $save_dir;                       // 配置保存目录
+    public $configPath;                     // 配置保存目录
     protected $configServer;                // apollo服务端地址
     protected $appId;                       // apollo配置项目的appid
     protected $cluster = 'default';
@@ -23,7 +23,7 @@ class ApolloClient
         foreach ($namespaces as $namespace) {
             $this->notifications[$namespace] = ['namespaceName' => $namespace, 'notificationId' => -1];
         }
-        $this->save_dir = $configPath ? $configPath : dirname($_SERVER['SCRIPT_FILENAME']);
+        $this->configPath = $configPath ? $configPath : dirname($_SERVER['SCRIPT_FILENAME']);
     }
 
     /**
@@ -91,7 +91,7 @@ class ApolloClient
      */
     public function getConfigFile($namespaceName)
     {
-        return $this->save_dir . DIRECTORY_SEPARATOR . 'apollo.' . $namespaceName . '.php';
+        return $this->configPath . DIRECTORY_SEPARATOR . 'apollo.' . $namespaceName . '.php';
     }
 
     /**
@@ -186,8 +186,9 @@ class ApolloClient
             curl_multi_remove_handle($multi_ch,$req['ch']);
             curl_close($req['ch']);
             if ($code == 200) {
-                $result = json_decode($result, true);
-                $content = '<?php return '.var_export($result, true).';';
+                $content  = '<?php' . PHP_EOL . PHP_EOL;
+                $content .= 'return '  . var_export($result['configurations'], true)  . ';' . PHP_EOL . PHP_EOL;
+                $content .= '?>' . PHP_EOL;
                 file_put_contents($req['config_file'], $content);
             }elseif ($code != 304) {
                 echo 'pull config of namespace['.$namespaceName.'] error:'.($result ?: $error)."\n";

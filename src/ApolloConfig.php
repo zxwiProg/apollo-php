@@ -48,7 +48,7 @@ class ApolloConfig
         if (!file_exists($filename)) {
             file_put_contents($filename, 1);
             $script = 'nohup ' . $phpCli . ' ' . $config['configPath'] . '/' . $apolloScript . ' >/dev/null 2>&1 &';
-            system($script, $return_status);
+            system($script, $status);
         }
         
     }
