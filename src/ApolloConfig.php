@@ -74,7 +74,7 @@ class ApolloConfig
         $cluster = $config["cluster"];
         $apollo = new ApolloClient($serverUrl, $appId, $namespaces, $configPath);
         $apollo->setCluster($cluster);
-        $configFilePath = $apollo->getConfigFile($namespaceName);
+        $configFilePath = $apollo->getConfigFile($namespace);
         return require($configFilePath);    
     }
 
