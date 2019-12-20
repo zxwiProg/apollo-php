@@ -1,5 +1,5 @@
 {
-    "name": "octopus/apollo-php",
+    "name": "iprog/apollo-php",
     "description": "章鱼的apollo配置中心php客户端",
     "type": "composer-plugin",
     "license": "MIT",
@@ -15,7 +15,7 @@
     },
 	"autoload": {
         "psr-4": {
-            "Octopus\\ApolloPhp\\": "src/"
+            "ApolloPhp\\": "src/"
         }
     }
 }

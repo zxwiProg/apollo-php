@@ -1,5 +1,5 @@
 <?php
-namespace Octopus\ApolloPhp;
+namespace ApolloPhp;
 
 class ApolloClient
 {

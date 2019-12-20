@@ -1,5 +1,5 @@
 <?php
-namespace Octopus\ApolloPhp;
+namespace ApolloPhp;
 
 class ApolloConfig
 {
@@ -29,7 +29,7 @@ class ApolloConfig
         $code .= '$namespaces = ' . var_export($config["namespaces"], true) . ';' . PHP_EOL;
         $code .= '$configPath = "' . $config["configPath"] . '";' . PHP_EOL;
         $code .= '$cluster = "' . $config["cluster"] . '";' . PHP_EOL;
-        $code .= '$apollo = new Octopus\ApolloPhp\ApolloClient(' . PHP_EOL;
+        $code .= '$apollo = new ApolloPhp\ApolloClient(' . PHP_EOL;
         $code .= '    $serverUrl,' . PHP_EOL;
         $code .= '    $appId,' . PHP_EOL;
         $code .= '    array_values($namespaces),' . PHP_EOL;
