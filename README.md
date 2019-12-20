@@ -32,7 +32,7 @@ $config = [
 	'appId'     => 'event-analysis-1',                 // apollo上的appid
     'cluster'   => 'default',                          // apollo上的cluster
     'namespaces'=> ['mysql', 'redis'],                 // apollo上的命名空间
-    'configPath'=> '/mnt/d/apollo-php/config',         // php应用的配置文件目录，拉取apollo配置后，会将配置文件保存在该目录
+    'configPath'=> '/mnt/d/apollo-php/config',         // php应用的配置文件目录
 ];
 
 ApolloPhp\ApolloConfig::run(
@@ -52,7 +52,7 @@ $config = [
 	'appId'     => 'event-analysis-1',                 // apollo上的appid
     'cluster'   => 'default',                          // apollo上的cluster
     'namespaces'=> ['mysql', 'redis'],                 // apollo上的命名空间
-    'configPath'=> '/mnt/d/apollo-php/config',         // php应用的配置文件目录，拉取apollo配置后，会将配置文件保存在该目录
+    'configPath'=> '/mnt/d/apollo-php/config',         // php应用的配置文件目录
 ];
 
 $namespace = 'redis';
