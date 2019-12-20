@@ -22,7 +22,7 @@ class ApolloConfig
         $filename = $config['configPath'] . DIRECTORY_SEPARATOR . 'apollo_config_lock';
 
         $code  = '<?php' . PHP_EOL . PHP_EOL;
-        $code .= 'require "' . $vendorPath . '/autoload.php";' . PHP_EOL . PHP_EOL;
+        $code .= 'require "' . $vendorPath . '/vendor/autoload.php";' . PHP_EOL . PHP_EOL;
         $code .= 'ini_set("memory_limit", "128M");' . PHP_EOL . PHP_EOL;
         $code .= '$serverUrl = "' . $config["serverUrl"] . '";' . PHP_EOL;
         $code .= '$appId = "' . $config["appId"] . '";' . PHP_EOL;
