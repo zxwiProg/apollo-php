@@ -50,21 +50,13 @@ class ApolloConfig
         chmod($apolloScript, 0755);
         file_put_contents($apolloScript, $code);
 
-        $isRun = false;
-
         // 记得处理日志
         $lockFile = $appConfigPath . DIRECTORY_SEPARATOR . self::APOLLO_AUTO_SCRIPT_FILENAME;
         if (!file_exists($lockFile)) {
-            $isRun = true;
             file_put_contents($lockFile, 1);
-        } else {
-            $content = file_get_contents($lockFile);
-            trim($content) == 1 && $isRun = true;
-        }
-
-        if ($isRun) {
-            $script = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
-            $errMsg = system($script, $status);
+            $phpScript = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
+            $sh = 'crontab -l > /tmp/conf && echo "* * * * * ' . $phpScript . '" >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
+            $errMsg = system($sh, $status);
             error_log('[' . date('Y-m-d H:i:s') . '][status：' . $status  . '] apollo脚本运行错误：' . $errMsg);
         }
     }

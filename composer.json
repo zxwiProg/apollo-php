@@ -1,6 +1,6 @@
 {
     "name": "iprog/apollo-php",
-    "description": "apollo配置中心php客户端（2345.com）",
+    "description": "apollo配置中心php客户端",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "dev",

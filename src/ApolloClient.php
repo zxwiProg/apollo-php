@@ -221,42 +221,32 @@ class ApolloClient
      */
     protected function start($callback = null)
     {
-        $query = ['appId' => $this->apolloAppId, 'cluster' => $this->apolloCluster];
+        $query = [
+            'appId'         => $this->apolloAppId,
+            'cluster'       => $this->apolloCluster,
+            'notifications' => json_encode(array_values($this->notifications))
+        ];
+
+        $url = $this->apolloServerUrl . '/notifications/v2?' . http_build_query($query);
+        $ret = ApolloCurl::get($url, [], $this->intervalTimeout);
         
-        // 循环执行请求
-        while (true) {
-            $lockFile = $this->appConfigPath . DIRECTORY_SEPARATOR . ApolloConfig::APOLLO_AUTO_SCRIPT_FILENAME;
-            if (!file_exists($lockFile)) {
-                break;
-            }
-
-            $content = file_get_contents($lockFile);
-            if (trim($content) != 1) {
-                break;
-            }
-
-            $query['notifications'] = json_encode(array_values($this->notifications));
-            $url = $this->apolloServerUrl . '/notifications/v2?' . http_build_query($query);
-            $ret = ApolloCurl::get($url, [], $this->intervalTimeout);
-            
-            if ($ret['httpCode'] == 200) {
-                $response = json_decode($ret['respData'], true);
-                $changeList = [];
-                foreach ($response as $r) {
-                    if ($r['notificationId'] != $this->notifications[$r['namespaceName']]['notificationId']) {
-                        $changeList[$r['namespaceName']] = $r['notificationId'];
-                    }
+        if ($ret['httpCode'] == 200) {
+            $response = json_decode($ret['respData'], true);
+            $changeList = [];
+            foreach ($response as $r) {
+                if ($r['notificationId'] != $this->notifications[$r['namespaceName']]['notificationId']) {
+                    $changeList[$r['namespaceName']] = $r['notificationId'];
                 }
-                $responseList = $this->pullConfigBatch(array_keys($changeList));
-                foreach ($responseList as $namespaceName => $result) {
-                    $result && ($this->notifications[$namespaceName]['notificationId'] = $changeList[$namespaceName]);
-                }
-                //如果定义了配置变更的回调，比如重新整合配置，则执行回调
-                ($callback instanceof \Closure) && call_user_func($callback);
-            } elseif ($ret['httpCode'] != 304) {
-                $errMsg = $ret['respData'] ?: $ret['respError'];
-                error_log('[' . date('Y-m-d H:i:s') . '] pull notifications error:' . $errMsg);
             }
+            $responseList = $this->pullConfigBatch(array_keys($changeList));
+            foreach ($responseList as $namespaceName => $result) {
+                $result && ($this->notifications[$namespaceName]['notificationId'] = $changeList[$namespaceName]);
+            }
+            //如果定义了配置变更的回调，比如重新整合配置，则执行回调
+            ($callback instanceof \Closure) && call_user_func($callback);
+        } elseif ($ret['httpCode'] != 304) {
+            $errMsg = $ret['respData'] ?: $ret['respError'];
+            error_log('[' . date('Y-m-d H:i:s') . '] pull notifications error:' . $errMsg);
         }
     }
 

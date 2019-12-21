@@ -13,6 +13,7 @@ composer require iprog/apollo-php
 
 - **PHP7.2** or later
 - php-curl扩展
+- linux需启用crontab，执行命令service cron start
 <br>
 
 
