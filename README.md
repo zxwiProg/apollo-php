@@ -22,25 +22,23 @@ composer require iprog/apollo-php
 
 ```php
 $config = [
-    'serverUrl' => 'http://172.17.18.211:38080',       // apollo的服务器地址
-    'appId'     => 'event-analysis-1',                 // apollo上的appid
-    'cluster'   => 'default',                          // apollo上的cluster
-    'namespaces'=> ['mysql', 'redis'],                 // apollo上的命名空间
-    'configPath'=> '/mnt/d/apollo-php/config',         // php应用的配置文件目录
+    'serverUrl'     => 'http://172.17.18.211:38080',       // apollo的服务器地址
+    'appId'         => 'event-analysis-1',                 // apollo上的appid
+    'cluster'       => 'default',                          // apollo上的cluster
+    'namespaces'    => ['mysql', 'redis'],                 // apollo上的命名空间
+    'configPath'    => '/mnt/d/apollo-php/config',         // php应用的配置文件目录
+    'app_log_path'  => '/var/www/optopus/log',             // php应用的日志文件目录
 ];
 ```
 
 2、在php的应用入口（如index.php文件等）添加如下代码：
 
 ```php
-require '/app/xxx/vendor/autoload.php';                // 这里加载vendor的自动加载
+// 这里先加载vendor的自动加载文件
+require '/app/xxx/vendor/autoload.php';                
 
 // 用上面的配置并启动获取脚本
-ApolloPhp\ApolloConfig::run(
-	$config, 
-	'/var/www/app',                                    // composer的vendor所在目录
-	'/usr/bin/php'                                     // php客户端cli的指令目录
-);
+ApolloPhp\ApolloConfig::listen($config, '/var/www/app', '/usr/bin/php' );
 ```
 
 3、在其它地方获取配置：
