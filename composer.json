@@ -10,10 +10,10 @@
 			"email": "zhangxw@2345.com"
         }
     ],
-	"require": {
+    "require": {
         "php": "^7.1"
     },
-	"autoload": {
+    "autoload": {
         "psr-4": {
             "ApolloPhp\\": "src/"
         }
