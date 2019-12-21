@@ -12,7 +12,7 @@ composer require iprog/apollo-php
 ## 依赖
 
 - **PHP7.2** or later
-- php-culr扩展
+- php-curl扩展
 <br>
 
 

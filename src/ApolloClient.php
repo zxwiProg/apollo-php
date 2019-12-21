@@ -1,6 +1,12 @@
 <?php
 namespace ApolloPhp;
 
+/**
+ * apollo客户端请求类
+ * @copyright   Copyright(c) 2019
+ * @author      iProg
+ * @version     1.0
+ */
 class ApolloClient
 {
     protected $appConfigPath;                  // php应用的配置目录
@@ -141,10 +147,10 @@ class ApolloClient
         // 200直接返回结果
         $result = json_decode($ret['respData'], true);
         if ($result && is_array($result)) {
+            $newConfig = ApolloConfig::parseConfig($result['configurations']);
             $content  = '<?php' . PHP_EOL . PHP_EOL;
-            $content .= 'return '  . var_export($result['configurations'], true)  . ';' . PHP_EOL . PHP_EOL;
+            $content .= 'return '  . var_export($newConfig, true)  . ';' . PHP_EOL . PHP_EOL;
             $content .= '?>' . PHP_EOL;
-
             $configFilePath = $this->getConfigFile($namespace);
             file_put_contents($configFilePath, $content);
         }
@@ -197,8 +203,9 @@ class ApolloClient
             $respList[$namespace] = true;
             $result = json_decode($response[$namespace]['respData'], true);
             if ($result && is_array($result)) {
+                $newConfig = ApolloConfig::parseConfig($result['configurations']);
                 $content  = '<?php' . PHP_EOL . PHP_EOL;
-                $content .= 'return '  . var_export($result['configurations'], true)  . ';' . PHP_EOL . PHP_EOL;
+                $content .= 'return '  . var_export($newConfig, true)  . ';' . PHP_EOL . PHP_EOL;
                 $content .= '?>' . PHP_EOL;
                 $configFilePath = $this->getConfigFile($namespace);
                 file_put_contents($configFilePath, $content);

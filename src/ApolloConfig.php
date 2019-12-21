@@ -1,6 +1,12 @@
 <?php
 namespace ApolloPhp;
 
+/**
+ * apollo相关配置处理类
+ * @copyright   Copyright(c) 2019
+ * @author      iProg
+ * @version     1.0
+ */
 class ApolloConfig
 {
     const APOLLO_AUTO_SCRIPT_FILENAME = 'apollo_auto_script.lock';
@@ -87,6 +93,42 @@ class ApolloConfig
         $configFilePath = $apollo->getConfigFile($namespace);
 
         return require($configFilePath);    
+    }
+
+    /**
+     * 解析apollo返回的配置
+     * @param array   $originConfig      配置信息
+     *                                   [
+     *                                      'mysql.test.host'       => '172.0.0.1',
+	 *                                      'mysql.test.mysql.port' => 22,
+	 *                                      'mysql.prod.host'       => '172.0.0.1',
+	 *                                      'mysql.prod.port'       => 22,
+     *                                      'mysql.dev.host'        => '172.0.0.1',
+	 *                                      'mysql.dev.port'        => 22,
+     *                                   ]
+     * @return array
+     */
+    public static function parseConfig($originConfig)
+    {
+        if (empty($originConfig) || !is_array($originConfig)) {
+            return false;
+        }
+        
+        $newConfig = [];
+        foreach ($originConfig as $keys => $value) {
+            $keys = explode('.', $keys);
+            if (empty($keys) || !is_array($keys)) {
+                continue;
+            }
+            $codeStr = '$newConfig';
+            foreach ($keys as $key) {
+                $codeStr .= '["' . $key . '"]';
+            }
+            $codeStr .= '="' . $value . '";';
+            eval($codeStr);
+        }
+    
+        return $newConfig;
     }
 
 }
