@@ -7,7 +7,7 @@
 	"authors": [
         {
             "name": "iProg",
-			"email": "zhangxw@2345.com"
+	    "email": "zhangxw@2345.com"
         }
     ],
     "require": {
