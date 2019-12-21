@@ -3,27 +3,43 @@ namespace ApolloPhp;
 
 class ApolloClient
 {
-    public $configPath;                     // 配置保存目录
-    protected $configServer;                // apollo服务端地址
-    protected $appId;                       // apollo配置项目的appid
-    protected $cluster = 'default';
-    protected $clientIp = '127.0.0.1';      // 绑定IP做灰度发布用
+    protected $appConfigPath;                  // php应用的配置目录
+
+    protected $apolloServerUrl;                // apollo服务端地址
+    protected $apolloAppId;                    // apollo配置的appid
+    protected $apolloNamespaces;               // apollo配置的namespaces
+    protected $apolloCluster = 'default';      // apollo配置的cluster
+    protected $apolloReqUrl;                   // 请求apollo的服务器地址
+
+    protected $clientIp = '127.0.0.1';         // 绑定IP做灰度发布用
+    
     protected $notifications = [];
-    protected $pullTimeout = 10;            // 获取某个namespace配置的请求超时时间
-    protected $intervalTimeout = 60;        // 每次请求获取apollo配置变更时的超时时间
+    protected $pullTimeout = 10;               // 获取某个namespace配置的请求超时时间
+    protected $intervalTimeout = 60;           // 每次请求获取apollo配置变更时的超时时间
     
     /**
-     * ApolloClient constructor.
+     * Apollo客户端构造函数
+     * @param  array  $config  客户端配置
      */
-    public function __construct($serverUrl, $appId, $namespaces, $configPath = '')
+    public function __construct($config)
     {
-        $this->configServer = $serverUrl;
-        $this->appId = $appId;
-        $namespaces = json_decode($namespaces, true);
-        foreach ($namespaces as $namespace) {
+        $this->apolloAppId      = $config['apollo_app_id'];
+        $this->apolloNamespaces = $config['apollo_namespaces'];
+        $this->apolloServerUrl  = rtrim($config['apollo_server_url'], '/');
+
+        // 生成请求apollo的基本uri
+        $this->apolloReqUrl = $this->apolloServerUrl . '/configs/' . $this->apolloAppId;
+
+        // 设置配置获取后保存的目录
+        $this->appConfigPath = dirname($_SERVER['SCRIPT_FILENAME']);
+        if (isset($config['app_config_path']) && !empty($config['app_config_path'])) {
+            $this->appConfigPath = rtrim($config['app_config_path'], '/');
+        }
+
+        // 初始化命名空间通知中心
+        foreach ($this->apolloNamespaces as $namespace) {
             $this->notifications[$namespace] = ['namespaceName' => $namespace, 'notificationId' => -1];
         }
-        $this->configPath = $configPath ? $configPath : dirname($_SERVER['SCRIPT_FILENAME']);
     }
 
     /**
@@ -32,7 +48,7 @@ class ApolloClient
      */
     public function setCluster($cluster)
     {
-        $this->cluster = $cluster;
+        $this->apolloCluster = $cluster;
     }
 
     /**
@@ -51,10 +67,9 @@ class ApolloClient
     public function setPullTimeout($pullTimeout)
     {
         $pullTimeout = intval($pullTimeout);
-        if ($pullTimeout < 1 || $pullTimeout > 300) {
-            return;
+        if ($pullTimeout >= 1 && $pullTimeout <= 300) {
+            $this->pullTimeout = $pullTimeout;
         }
-        $this->pullTimeout = $pullTimeout;
     }
 
     /**
@@ -64,139 +79,132 @@ class ApolloClient
     public function setIntervalTimeout($intervalTimeout)
     {
         $intervalTimeout = intval($intervalTimeout);
-        if ($intervalTimeout < 1 || $intervalTimeout > 300) {
-            return;
+        if ($intervalTimeout >= 1 && $intervalTimeout <= 300) {
+            $this->intervalTimeout = $intervalTimeout;
         }
-        $this->intervalTimeout = $intervalTimeout;
-    }
-
-    /**
-     * 获取key
-     * @param int  $config_file  配置文件路径
-     */
-    private function _getReleaseKey($config_file)
-    {
-        $releaseKey = '';
-        if (file_exists($config_file)) {
-            $last_config = require $config_file;
-            is_array($last_config) && isset($last_config['releaseKey']) && $releaseKey = $last_config['releaseKey'];
-        }
-        return $releaseKey;
     }
 
     /**
      * 获取单个namespace的配置文件路径
-     * @param string  $namespaceName  配置命名空间
-     * @return string
+     * @param   string    $namespace   配置命名空间
+     * @return  string
      */
-    public function getConfigFile($namespaceName)
+    public function getConfigFile($namespace)
     {
-        return $this->configPath . DIRECTORY_SEPARATOR . 'apollo.' . $namespaceName . '.php';
+        return $this->appConfigPath . DIRECTORY_SEPARATOR . 'apollo.' . $namespace . '.php';
+    }
+
+    /**
+     * 获取key
+     * @param  string  $configFilePath  配置文件路径
+     */
+    private function _getReleaseKey($namespace)
+    {
+        $configFilePath = $this->getConfigFile($namespace);
+        if (!file_exists($configFilePath)) {
+            return '';
+        }
+
+        $releaseKey = '';
+        $lastConfig = require $configFilePath;
+        if (is_array($lastConfig) && isset($lastConfig['releaseKey'])) {
+            $releaseKey = $lastConfig['releaseKey'];
+        }
+
+        return $releaseKey;
     }
 
     /**
      * 获取单个namespace的配置-无缓存的方式
-     * @param string  $namespaceName  配置命名空间
-     * @return array
+     * @param   string   $namespace   配置命名空间
+     * @return  boolean
      */
-    public function pullConfig($namespaceName)
+    public function pullConfig($namespace)
     {
-        $base_api = rtrim($this->configServer, '/') . '/configs/' . $this->appId . '/' . $this->cluster . '/';
-        $api = $base_api . $namespaceName;
-        $args = [];
-        $args['ip'] = $this->clientIp;
-        $config_file = $this->getConfigFile($namespaceName);
-        $args['releaseKey'] = $this->_getReleaseKey($config_file);
-        $api .= '?' . http_build_query($args);
-        $ch = curl_init($api);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->pullTimeout);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $body = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-        if ($httpCode == 200) {
-            $result = json_decode($body, true);
-            if ($result && is_array($result)) {
-                $content  = '<?php' . PHP_EOL . PHP_EOL;
-                $content .= 'return '  . var_export($result['configurations'], true)  . ';' . PHP_EOL . PHP_EOL;
-                $content .= '?>' . PHP_EOL;
-                file_put_contents($config_file, $content);
-            }
-        }elseif ($httpCode != 304) {
-            echo $body ?: $error."\n";
+        $releaseKey = $this->_getReleaseKey($namespace);
+
+        // 请求apollo
+        $args = http_build_query(['ip' => $this->clientIp, 'releaseKey' => $releaseKey]);
+        $url = $this->apolloReqUrl . '/' . $this->apolloCluster . '/' . $namespace . '?' . $args;
+        $ret = ApolloCurl::get($url, [], $this->pullTimeout);
+
+        // 304直接返回true
+        if ($ret['httpCode'] == 304) {
+            return true;
+        }
+        // 非200直接返回false
+        if ($ret['httpCode'] != 200) {
+            $errMsg = $ret['respData'] ?: $ret['respError'];
+            error_log('[' . date('Y-m-d H:i:s') . '] pull config of namespace[' . $namespace . '] error:' . $errMsg);
             return false;
+        }
+        // 200直接返回结果
+        $result = json_decode($ret['respData'], true);
+        if ($result && is_array($result)) {
+            $content  = '<?php' . PHP_EOL . PHP_EOL;
+            $content .= 'return '  . var_export($result['configurations'], true)  . ';' . PHP_EOL . PHP_EOL;
+            $content .= '?>' . PHP_EOL;
+
+            $configFilePath = $this->getConfigFile($namespace);
+            file_put_contents($configFilePath, $content);
         }
         return true;
     }
 
     /**
      * 获取多个namespace的配置-无缓存的方式
-     * @param array  $namespaceNames  配置命名空间
+     * @param array  $namespaces  配置命名空间
      * @return array
      */
-    public function pullConfigBatch(array $namespaceNames)
+    public function pullConfigBatch(array $namespaces)
     {
-        if (! $namespaceNames) {
+        if (!$namespaces) {
             return [];
         }
-        $multi_ch = curl_multi_init();
-        $request_list = [];
-        $base_url = rtrim($this->configServer, '/') . '/configs/' . $this->appId . '/' . $this->cluster . '/';
-        $query_args = [];
-        $query_args['ip'] = $this->clientIp;
-        foreach ($namespaceNames as $namespaceName) {
-            $request = [];
-            $config_file = $this->getConfigFile($namespaceName);
-            $request_url = $base_url . $namespaceName;
-            $query_args['releaseKey'] = $this->_getReleaseKey($config_file);
-            $query_string = '?' . http_build_query($query_args);
-            $request_url .= $query_string;
-            $ch = curl_init($request_url);
-            curl_setopt($ch, CURLOPT_TIMEOUT, $this->pullTimeout);
-            curl_setopt($ch, CURLOPT_HEADER, false);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            $request['ch'] = $ch;
-            $request['config_file'] = $config_file;
-            $request_list[$namespaceName] = $request;
-            curl_multi_add_handle($multi_ch, $ch);
+
+        $reqList = $respList = [];
+
+        // 处理请求数据
+        foreach ($namespaces as $namespace) {
+            $releaseKey = $this->_getReleaseKey($namespace);
+            $args = http_build_query(['ip' => $this->clientIp, 'releaseKey' => $releaseKey]);
+            $url = $this->apolloReqUrl . '/' . $this->apolloCluster . '/' . $namespace . '?' . $args;
+            $reqList[$namespace] = ['url' => $url, 'data' => []];
         }
-        $active = null;
-        // 执行批处理句柄
-        do {
-            $mrc = curl_multi_exec($multi_ch, $active);
-        } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-        while ($active && $mrc == CURLM_OK) {
-            if (curl_multi_select($multi_ch) == -1) {
-                usleep(100);
+
+        $response = ApolloCurl::MultiCurl($reqList, $this->pullTimeout);
+        if (empty($response) || !is_array($response)) return [];
+        
+        // 处理返回结果
+        foreach ($reqList as $namespace => $info) {
+            if (!isset($response[$namespace])) {
+                $respList[$namespace] = false;
+                continue;
             }
-            do {
-                $mrc = curl_multi_exec($multi_ch, $active);
-            } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-            
-        }
-        // 获取结果
-        $response_list = [];
-        foreach ($request_list as $namespaceName => $req) {
-            $response_list[$namespaceName] = true;
-            $result = curl_multi_getcontent($req['ch']);
-            $code = curl_getinfo($req['ch'], CURLINFO_HTTP_CODE);
-            $error = curl_error($req['ch']);
-            curl_multi_remove_handle($multi_ch,$req['ch']);
-            curl_close($req['ch']);
-            if ($code == 200) {
+            // 304为true
+            if ($response[$namespace]['httpCode'] == 304) {
+                $respList[$namespace] = true;
+                continue;
+            }
+            // 非200为false
+            if ($response[$namespace]['httpCode'] != 200) {
+                $respList[$namespace] = false;
+                $errMsg = $response[$namespace]['respData'] ?: $response[$namespace]['respError'];
+                error_log('[' . date('Y-m-d H:i:s') . '] pull config of namespace[' . $namespace . '] error:' . $errMsg);
+                continue;
+            }
+            // 200为true
+            $respList[$namespace] = true;
+            $result = json_decode($response[$namespace]['respData'], true);
+            if ($result && is_array($result)) {
                 $content  = '<?php' . PHP_EOL . PHP_EOL;
                 $content .= 'return '  . var_export($result['configurations'], true)  . ';' . PHP_EOL . PHP_EOL;
                 $content .= '?>' . PHP_EOL;
-                file_put_contents($req['config_file'], $content);
-            }elseif ($code != 304) {
-                echo 'pull config of namespace['.$namespaceName.'] error:'.($result ?: $error)."\n";
-                $response_list[$namespaceName] = false;
+                $configFilePath = $this->getConfigFile($namespace);
+                file_put_contents($configFilePath, $content);
             }
         }
-        curl_multi_close($multi_ch);
-        return $response_list;
+        return $respList;
     }
 
     /**
@@ -204,55 +212,44 @@ class ApolloClient
      * @param object  $ch  curl请求对象
      * @param func    $callback  回调函数
      */
-    protected function _listenChange(&$ch, $callback = null)
+    protected function start($callback = null)
     {
-        $base_url = rtrim($this->configServer, '/') . '/notifications/v2?';
-        $params = [];
-        $params['appId'] = $this->appId;
-        $params['cluster'] = $this->cluster;
-        do {
-            $params['notifications'] = json_encode(array_values($this->notifications));
-            $query = http_build_query($params);
-            curl_setopt($ch, CURLOPT_URL, $base_url.$query);
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch,CURLINFO_HTTP_CODE);
-            $error = curl_error($ch);
-            if ($httpCode == 200) {
-                $res = json_decode($response, true);
-                $change_list = [];
-                foreach ($res as $r) {
+        $query = ['appId' => $this->apolloAppId, 'cluster' => $this->apolloCluster];
+        
+        // 循环执行请求
+        while (true) {
+            $lockFile = $this->appConfigPath . DIRECTORY_SEPARATOR . ApolloConfig::APOLLO_AUTO_SCRIPT_FILENAME;
+            if (!file_exists($lockFile)) {
+                break;
+            }
+
+            $content = file_get_contents($lockFile);
+            if (trim($content) != 1) {
+                break;
+            }
+
+            $query['notifications'] = json_encode(array_values($this->notifications));
+            $url = $this->apolloServerUrl . '/notifications/v2?' . http_build_query($query);
+            $ret = ApolloCurl::get($url, [], $this->intervalTimeout);
+            
+            if ($ret['httpCode'] == 200) {
+                $response = json_decode($ret['respData'], true);
+                $changeList = [];
+                foreach ($response as $r) {
                     if ($r['notificationId'] != $this->notifications[$r['namespaceName']]['notificationId']) {
-                        $change_list[$r['namespaceName']] = $r['notificationId'];
+                        $changeList[$r['namespaceName']] = $r['notificationId'];
                     }
                 }
-                $response_list = $this->pullConfigBatch(array_keys($change_list));
-                foreach ($response_list as $namespaceName => $result) {
-                    $result && ($this->notifications[$namespaceName]['notificationId'] = $change_list[$namespaceName]);
+                $responseList = $this->pullConfigBatch(array_keys($changeList));
+                foreach ($responseList as $namespaceName => $result) {
+                    $result && ($this->notifications[$namespaceName]['notificationId'] = $changeList[$namespaceName]);
                 }
                 //如果定义了配置变更的回调，比如重新整合配置，则执行回调
                 ($callback instanceof \Closure) && call_user_func($callback);
-            }elseif ($httpCode != 304) {
-                throw new \Exception($response ?: $error);
+            } elseif ($ret['httpCode'] != 304) {
+                $errMsg = $ret['respData'] ?: $ret['respError'];
+                error_log('[' . date('Y-m-d H:i:s') . '] pull notifications error:' . $errMsg);
             }
-        } while (true);
-    }
-
-    /**
-     * 启动监听
-     * @param $callback 监听到配置变更时的回调处理
-     * @return mixed
-     */
-    public function start($callback = null)
-    {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->intervalTimeout);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        try {
-            $this->_listenChange($ch, $callback);
-        } catch (\Exception $e) {
-            curl_close($ch);
-            return $e->getMessage();
         }
     }
 

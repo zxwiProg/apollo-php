@@ -3,78 +3,89 @@ namespace ApolloPhp;
 
 class ApolloConfig
 {
+    const APOLLO_AUTO_SCRIPT_FILENAME = 'apollo_auto_script.lock';
+
     /**
      * 生成启动脚本
      * @param array   $config      配置信息
-     *                              [
-     *                                   'serverUrl' => 'http://172.17.18.211:38080',
-     *                                   'appId'     => 'event-analysis-1',
-     *                                   'cluster'   => 'default',
-     *                                   'namespaces'=> ['redis', 'mysql'],
-     *                                   'configPath'=> '/var/www/optopus/config',
-     *                              ]
+     *                             [
+     *                                  'apollo_server_url' => 'http://172.17.18.211:38080',
+     *                                  'apollo_app_id'     => 'event-analysis-1',
+     *                                  'apollo_cluster'    => 'default',
+     *                                  'apollo_namespaces' => ['redis', 'mysql'],
+     *                                  'app_config_path'   => '/var/www/optopus/config',
+     *                                  'app_log_path'      => '/var/www/optopus/log',
+     *                             ]
      * @param string  $vendorPath  composer的vendor路径
      * @param string  $phpCli      php的cli路径
      */
-    public static function run($config, $vendorPath = '', $phpCli = '')
+    public static function listen($config, $vendorPath = '', $phpCli = '')
     {
-        $apolloScript = 'apollo_script.php';
-        $filename = $config['configPath'] . DIRECTORY_SEPARATOR . 'apollo_config_lock';
+        $appLogPath = rtrim($config['app_log_path'], '/') . DIRECTORY_SEPARATOR . 'apollo_runtime.log';
+
+        ini_set('log_errors', 1); 
+        ini_set('error_log', $appLogPath);
 
         $code  = '<?php' . PHP_EOL . PHP_EOL;
         $code .= 'require "' . $vendorPath . '/vendor/autoload.php";' . PHP_EOL . PHP_EOL;
-        $code .= 'ini_set("memory_limit", "128M");' . PHP_EOL . PHP_EOL;
-        $code .= '$serverUrl = "' . $config["serverUrl"] . '";' . PHP_EOL;
-        $code .= '$appId = "' . $config["appId"] . '";' . PHP_EOL;
-        $code .= '$namespaces = ' . var_export($config["namespaces"], true) . ';' . PHP_EOL;
-        $code .= '$configPath = "' . $config["configPath"] . '";' . PHP_EOL;
-        $code .= '$cluster = "' . $config["cluster"] . '";' . PHP_EOL;
-        $code .= '$apollo = new ApolloPhp\ApolloClient(' . PHP_EOL;
-        $code .= '    $serverUrl,' . PHP_EOL;
-        $code .= '    $appId,' . PHP_EOL;
-        $code .= '    array_values($namespaces),' . PHP_EOL;
-        $code .= '    $configPath' . PHP_EOL;
-        $code .= ');' . PHP_EOL;
+        $code .= 'ini_set("memory_limit", "128M");' . PHP_EOL;
+        $code .= 'ini_set("log_errors", 1);' . PHP_EOL;
+        $code .= 'ini_set("error_log", "' . $appLogPath . '");' . PHP_EOL . PHP_EOL;
+        $code .= '$config = ' . var_export($config, true) . ';' . PHP_EOL . PHP_EOL;
+        $code .= '$apollo = new ApolloPhp\ApolloClient($config);' . PHP_EOL . PHP_EOL;
+        $code .= '$cluster = "' . $config["apollo_cluster"] . '";' . PHP_EOL;
         $code .= '$apollo->setCluster($cluster);' . PHP_EOL;
-        $code .= '$restart = true;' . PHP_EOL;
-        $code .= 'do {' . PHP_EOL;
-        $code .= '    $error = $apollo->start();' . PHP_EOL;
-        $code .= '    if ($error) echo("error:" . $error . "\n");' . PHP_EOL;
-        $code .= '} while ($error && $restart);' . PHP_EOL . PHP_EOL;
+        $code .= '$apollo->start();' . PHP_EOL . PHP_EOL;
         $code .= '?>' . PHP_EOL;
 
+        $appConfigPath = rtrim($config['app_config_path'], '/');
+        
+        $apolloScript = $appConfigPath . DIRECTORY_SEPARATOR . 'apollo_auto_script.php';
+        chmod($apolloScript, 0755);
         file_put_contents($apolloScript, $code);
 
-        if (!file_exists($filename)) {
-            file_put_contents($filename, 1);
-            $script = 'nohup ' . $phpCli . ' ' . $config['configPath'] . '/' . $apolloScript . ' >/dev/null 2>&1 &';
-            system($script, $status);
+        $isRun = false;
+
+        // 记得处理日志
+        $lockFile = $appConfigPath . DIRECTORY_SEPARATOR . self::APOLLO_AUTO_SCRIPT_FILENAME;
+        if (!file_exists($lockFile)) {
+            $isRun = true;
+            file_put_contents($lockFile, 1);
+        } else {
+            $content = file_get_contents($lockFile);
+            trim($content) == 1 && $isRun = true;
         }
-        
+
+        if ($isRun) {
+            $script = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
+            $errMsg = system($script, $status);
+            error_log('[' . date('Y-m-d H:i:s') . '][status：' . $status  . '] apollo脚本运行错误：' . $errMsg);
+        }
     }
 
     /**
      * 获取某个namespace配置
      * @param array   $config      配置信息
-     *                              [
-     *                                   'serverUrl' => 'http://172.17.18.211:38080',
-     *                                   'appId'     => 'event-analysis-1',
-     *                                   'cluster'   => 'default',
-     *                                   'namespaces'=> ['redis', 'mysql'],
-     *                                   'configPath'=> '/var/www/optopus/config',
-     *                              ]
+     *                             [
+     *                                  'apollo_server_url' => 'http://172.17.18.211:38080',
+     *                                  'apollo_app_id'     => 'event-analysis-1',
+     *                                  'apollo_cluster'    => 'default',
+     *                                  'apollo_namespaces' => ['redis', 'mysql'],
+     *                                  'app_config_path'   => '/var/www/optopus/config',
+     *                                  'app_log_path'      => '/var/www/optopus/log',
+     *                             ]
      * @param string  $namespace  apollo的命名空间
      */
     public static function get($config, $namespace)
     {
-        $serverUrl = $config["serverUrl"];
-        $appId = $config["appId"];
-        $namespaces = $config["namespaces"];
-        $configPath = $config["configPath"];
-        $cluster = $config["cluster"];
-        $apollo = new ApolloClient($serverUrl, $appId, $namespaces, $configPath);
+        $apollo = new ApolloClient($config);
+
+        $cluster = $config["apollo_cluster"] ?? 'default';
         $apollo->setCluster($cluster);
+
+        // apollo取回来的日志保存在app的配置文件目录，这里从配置目录获取配置
         $configFilePath = $apollo->getConfigFile($namespace);
+
         return require($configFilePath);    
     }
 
