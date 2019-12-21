@@ -38,7 +38,7 @@ $config = [
 require '/app/xxx/vendor/autoload.php';                
 
 // 用上面的配置并启动获取脚本
-ApolloPhp\ApolloConfig::listen($config, '/var/www/app', '/usr/bin/php' );
+ApolloPhp\ApolloConfig::listen($config, '/var/www/app', '/usr/bin/php');
 ```
 
 3、在其它地方获取配置：
