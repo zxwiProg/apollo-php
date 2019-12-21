@@ -183,24 +183,24 @@ class ApolloClient
         
         // 处理返回结果
         foreach ($reqList as $namespace => $info) {
+            $respList[$namespace] = true;
+
             if (!isset($response[$namespace])) {
                 $respList[$namespace] = false;
                 continue;
             }
-            // 304为true
+            
             if ($response[$namespace]['httpCode'] == 304) {
-                $respList[$namespace] = true;
                 continue;
             }
-            // 非200为false
+            
             if ($response[$namespace]['httpCode'] != 200) {
                 $respList[$namespace] = false;
                 $errMsg = $response[$namespace]['respData'] ?: $response[$namespace]['respError'];
                 error_log('[' . date('Y-m-d H:i:s') . '] pull config of namespace[' . $namespace . '] error:' . $errMsg);
                 continue;
             }
-            // 200为true
-            $respList[$namespace] = true;
+            
             $result = json_decode($response[$namespace]['respData'], true);
             if ($result && is_array($result)) {
                 $newConfig = ApolloConfig::parseConfig($result['configurations']);
@@ -215,38 +215,46 @@ class ApolloClient
     }
 
     /**
-     * 监听配置文件变化
+     * 监听配置文件变化(linux)
      * @param object  $ch  curl请求对象
      * @param func    $callback  回调函数
      */
     protected function start($callback = null)
     {
-        $query = [
-            'appId'         => $this->apolloAppId,
-            'cluster'       => $this->apolloCluster,
-            'notifications' => json_encode(array_values($this->notifications))
-        ];
+        $this->pullConfigBatch(array_keys($this->notifications));
+    }
 
-        $url = $this->apolloServerUrl . '/notifications/v2?' . http_build_query($query);
-        $ret = ApolloCurl::get($url, [], $this->intervalTimeout);
-        
-        if ($ret['httpCode'] == 200) {
-            $response = json_decode($ret['respData'], true);
-            $changeList = [];
-            foreach ($response as $r) {
-                if ($r['notificationId'] != $this->notifications[$r['namespaceName']]['notificationId']) {
-                    $changeList[$r['namespaceName']] = $r['notificationId'];
+    /**
+     * 监听配置文件变化(windows)
+     * @param object  $ch  curl请求对象
+     * @param func    $callback  回调函数
+     */
+    protected function winStart($callback = null)
+    {
+        $query = ['appId' => $this->apolloAppId, 'cluster' => $this->apolloCluster];
+        while (true) {
+            $query['notifications'] = json_encode(array_values($this->notifications));
+            $url = $this->apolloServerUrl . '/notifications/v2?' . http_build_query($query);
+            $ret = ApolloCurl::get($url, [], $this->intervalTimeout);
+            
+            if ($ret['httpCode'] == 200) {
+                $response = json_decode($ret['respData'], true);
+                $changeList = [];
+                foreach ($response as $r) {
+                    if ($r['notificationId'] != $this->notifications[$r['namespaceName']]['notificationId']) {
+                        $changeList[$r['namespaceName']] = $r['notificationId'];
+                    }
                 }
+                $responseList = $this->pullConfigBatch(array_keys($changeList));
+                foreach ($responseList as $namespaceName => $result) {
+                    $result && ($this->notifications[$namespaceName]['notificationId'] = $changeList[$namespaceName]);
+                }
+                //如果定义了配置变更的回调，比如重新整合配置，则执行回调
+                ($callback instanceof \Closure) && call_user_func($callback);
+            } elseif ($ret['httpCode'] != 304) {
+                $errMsg = $ret['respData'] ?: $ret['respError'];
+                error_log('[' . date('Y-m-d H:i:s') . '] pull notifications error:' . $errMsg);
             }
-            $responseList = $this->pullConfigBatch(array_keys($changeList));
-            foreach ($responseList as $namespaceName => $result) {
-                $result && ($this->notifications[$namespaceName]['notificationId'] = $changeList[$namespaceName]);
-            }
-            //如果定义了配置变更的回调，比如重新整合配置，则执行回调
-            ($callback instanceof \Closure) && call_user_func($callback);
-        } elseif ($ret['httpCode'] != 304) {
-            $errMsg = $ret['respData'] ?: $ret['respError'];
-            error_log('[' . date('Y-m-d H:i:s') . '] pull notifications error:' . $errMsg);
         }
     }
 

@@ -27,10 +27,14 @@ class ApolloConfig
      */
     public static function listen($config, $vendorPath = '', $phpCli = '')
     {
+        $isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' ? true : false;
+
         $appLogPath = rtrim($config['app_log_path'], '/') . DIRECTORY_SEPARATOR . 'apollo_runtime.log';
 
         ini_set('log_errors', 1); 
         ini_set('error_log', $appLogPath);
+
+        $startFunc = $isWin ? '$apollo->winStart();' : '$apollo->start();';
 
         $code  = '<?php' . PHP_EOL . PHP_EOL;
         $code .= 'require "' . $vendorPath . '/vendor/autoload.php";' . PHP_EOL . PHP_EOL;
@@ -41,7 +45,7 @@ class ApolloConfig
         $code .= '$apollo = new ApolloPhp\ApolloClient($config);' . PHP_EOL . PHP_EOL;
         $code .= '$cluster = "' . $config["apollo_cluster"] . '";' . PHP_EOL;
         $code .= '$apollo->setCluster($cluster);' . PHP_EOL;
-        $code .= '$apollo->start();' . PHP_EOL . PHP_EOL;
+        $code .= $startFunc . PHP_EOL . PHP_EOL;
         $code .= '?>' . PHP_EOL;
 
         $appConfigPath = rtrim($config['app_config_path'], '/');
@@ -50,12 +54,14 @@ class ApolloConfig
         chmod($apolloScript, 0755);
         file_put_contents($apolloScript, $code);
 
-        // 记得处理日志
+        // 启动脚本（windows是死循环，linux是定时任务）
         $lockFile = $appConfigPath . DIRECTORY_SEPARATOR . self::APOLLO_AUTO_SCRIPT_FILENAME;
         if (!file_exists($lockFile)) {
             file_put_contents($lockFile, 1);
-            $phpScript = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
-            $sh = 'crontab -l > /tmp/conf && echo "* * * * * ' . $phpScript . '" >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
+            $sh = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
+            if (!$isWin) {
+                $sh = 'crontab -l > /tmp/conf && echo "* * * * * ' . $sh . '" >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
+            }
             $errMsg = system($sh, $status);
             error_log('[' . date('Y-m-d H:i:s') . '][status：' . $status  . '] apollo脚本运行错误：' . $errMsg);
         }

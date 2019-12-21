@@ -138,7 +138,6 @@ class ApolloCurl
 				$respError = curl_error($ch);
 				curl_multi_remove_handle($mch, $ch);
 				curl_close($ch);
-
 				$response[$key] = [
 					'httpCode'  => $httpCode,
 					'respData'  => $respData,
