@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "minimum-stability": "dev",
-	"authors": [
+    "authors": [
         {
             "name": "iProg",
 	    "email": "zhangxw@2345.com"
