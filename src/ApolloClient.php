@@ -19,7 +19,7 @@ class ApolloClient
 
     protected $clientIp = '127.0.0.1';         // 绑定IP做灰度发布用
     
-    protected $notifications = [];
+    protected $notifications = [];             // 记录配置中心namespace是否有更新
     protected $pullTimeout = 10;               // 获取某个namespace配置的请求超时时间
     protected $intervalTimeout = 60;           // 每次请求获取apollo配置变更时的超时时间
     
@@ -27,7 +27,7 @@ class ApolloClient
      * Apollo客户端构造函数
      * @param  array  $config  客户端配置
      */
-    public function __construct($config)
+    public function __construct(array $config)
     {
         $this->apolloAppId      = $config['apollo_app_id'];
         $this->apolloNamespaces = $config['apollo_namespaces'];
@@ -52,7 +52,7 @@ class ApolloClient
      * 设置配置的cluster.
      * @param string $cluster  配置的cluster
      */
-    public function setCluster($cluster)
+    public function setCluster(string $cluster)
     {
         $this->apolloCluster = $cluster;
     }
@@ -61,7 +61,7 @@ class ApolloClient
      * 设置灰度ip.
      * @param string $ip  灰度ip
      */
-    public function setClientIp($ip)
+    public function setClientIp(string $ip)
     {
         $this->clientIp = $ip;
     }
@@ -70,7 +70,7 @@ class ApolloClient
      * 设置某个namespace配置的请求超时时间.
      * @param int  $pullTimeout  请求超时时间
      */
-    public function setPullTimeout($pullTimeout)
+    public function setPullTimeout(int $pullTimeout)
     {
         $pullTimeout = intval($pullTimeout);
         if ($pullTimeout >= 1 && $pullTimeout <= 300) {
@@ -82,7 +82,7 @@ class ApolloClient
      * 设置每次请求获取apollo配置变更时的超时时间
      * @param int  $intervalTimeout  配置变更时的超时时间
      */
-    public function setIntervalTimeout($intervalTimeout)
+    public function setIntervalTimeout(int $intervalTimeout)
     {
         $intervalTimeout = intval($intervalTimeout);
         if ($intervalTimeout >= 1 && $intervalTimeout <= 300) {
@@ -95,16 +95,17 @@ class ApolloClient
      * @param   string    $namespace   配置命名空间
      * @return  string
      */
-    public function getConfigFile($namespace)
+    public function getConfigFile(string $namespace) : string
     {
         return $this->appConfigPath . DIRECTORY_SEPARATOR . 'apollo.' . $namespace . '.php';
     }
 
     /**
      * 获取key
-     * @param  string  $configFilePath  配置文件路径
+     * @param   string  $configFilePath  配置文件路径
+     * @return  string
      */
-    private function _getReleaseKey($namespace)
+    private function _getReleaseKey(string $namespace) : string
     {
         $configFilePath = $this->getConfigFile($namespace);
         if (!file_exists($configFilePath)) {
@@ -125,7 +126,7 @@ class ApolloClient
      * @param   string   $namespace   配置命名空间
      * @return  boolean
      */
-    public function pullConfig($namespace)
+    public function pullConfig(string $namespace) : bool
     {
         $releaseKey = $this->_getReleaseKey($namespace);
 
@@ -162,7 +163,7 @@ class ApolloClient
      * @param array  $namespaces  配置命名空间
      * @return array
      */
-    public function pullConfigBatch(array $namespaces)
+    public function pullConfigBatch(array $namespaces) : array
     {
         if (!$namespaces) {
             return [];
@@ -178,29 +179,25 @@ class ApolloClient
             $reqList[$namespace] = ['url' => $url, 'data' => []];
         }
 
-        $response = ApolloCurl::MultiCurl($reqList, $this->pullTimeout);
+        $response = ApolloCurl::multiCurl($reqList, $this->pullTimeout);
         if (empty($response) || !is_array($response)) return [];
         
         // 处理返回结果
         foreach ($reqList as $namespace => $info) {
             $respList[$namespace] = true;
-
             if (!isset($response[$namespace])) {
                 $respList[$namespace] = false;
                 continue;
             }
-            
             if ($response[$namespace]['httpCode'] == 304) {
                 continue;
             }
-            
             if ($response[$namespace]['httpCode'] != 200) {
                 $respList[$namespace] = false;
                 $errMsg = $response[$namespace]['respData'] ?: $response[$namespace]['respError'];
                 error_log('[' . date('Y-m-d H:i:s') . '] pull config of namespace[' . $namespace . '] error:' . $errMsg);
                 continue;
             }
-            
             $result = json_decode($response[$namespace]['respData'], true);
             if ($result && is_array($result)) {
                 $newConfig = ApolloConfig::parseConfig($result['configurations']);
@@ -216,20 +213,16 @@ class ApolloClient
 
     /**
      * 监听配置文件变化(linux)
-     * @param object  $ch  curl请求对象
-     * @param func    $callback  回调函数
      */
-    protected function start($callback = null)
+    public function start() : void
     {
         $this->pullConfigBatch(array_keys($this->notifications));
     }
 
     /**
      * 监听配置文件变化(windows)
-     * @param object  $ch  curl请求对象
-     * @param func    $callback  回调函数
      */
-    protected function winStart($callback = null)
+    public function winStart() : void
     {
         $query = ['appId' => $this->apolloAppId, 'cluster' => $this->apolloCluster];
         while (true) {
@@ -249,8 +242,6 @@ class ApolloClient
                 foreach ($responseList as $namespaceName => $result) {
                     $result && ($this->notifications[$namespaceName]['notificationId'] = $changeList[$namespaceName]);
                 }
-                //如果定义了配置变更的回调，比如重新整合配置，则执行回调
-                ($callback instanceof \Closure) && call_user_func($callback);
             } elseif ($ret['httpCode'] != 304) {
                 $errMsg = $ret['respData'] ?: $ret['respError'];
                 error_log('[' . date('Y-m-d H:i:s') . '] pull notifications error:' . $errMsg);

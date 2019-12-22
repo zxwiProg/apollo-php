@@ -18,7 +18,7 @@ class ApolloCurl
      * @param int     $header    设定返回信息中是否包含响应信息头
      * @return mixed 
      */
-	public static function get($url, $options = [], $timeout = 30, $header = 0)
+	public static function get(string $url, array $options = [], int $timeout = 30, int $header = 0) : array
 	{
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
@@ -54,7 +54,7 @@ class ApolloCurl
      * @param int     $header     设定返回信息中是否包含响应信息头
      * @return mixed 
      */
-	public static function post($url, $postData = [], $headerData = [], $timeout = 30, $header = 0)
+	public static function post(string $url, array $postData = [], array $headerData = [], $timeout = 30, $header = 0) : array
 	{
 		$httph = curl_init($url);
 		curl_setopt($httph,CURLOPT_RETURNTRANSFER, 1);
@@ -90,7 +90,7 @@ class ApolloCurl
 	 * @param  int     $timeout   响应超时时间
      * @return mixed
      */
-    public static function MultiCurl($reqList, $timeout = 30)
+    public static function multiCurl(array $reqList, int $timeout = 30) : array
     {
 		$curlArray = [];
         try {
@@ -144,7 +144,8 @@ class ApolloCurl
 					'respError' => $respError,
 				];
 			}
-            curl_multi_close($mch);     
+			curl_multi_close($mch);  
+			unset($mch);   
             return $response;
         } catch (\Exception $e) {
 			error_log('[' . date('Y-m-d H:i:s') . '] curlMuti运行错误：' . $e->getMessage());

@@ -25,7 +25,7 @@ class ApolloConfig
      * @param string  $vendorPath  composer的vendor路径
      * @param string  $phpCli      php的cli路径
      */
-    public static function listen($config, $vendorPath = '', $phpCli = '')
+    public static function listen(array $config, string $vendorPath = '', string $phpCli = '') : void
     {
         $isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' ? true : false;
 
@@ -78,17 +78,19 @@ class ApolloConfig
      *                             ]
      * @param string  $namespace  apollo的命名空间
      */
-    public static function get($config, $namespace)
+    public static function get(array $config, string $namespace) : array
     {
-        $apollo = new ApolloClient($config);
-
+        $config = [];
         $cluster = $config["apollo_cluster"] ?? 'default';
+
+        $apollo = new ApolloClient($config);
         $apollo->setCluster($cluster);
 
         // apollo取回来的日志保存在app的配置文件目录，这里从配置目录获取配置
         $configFilePath = $apollo->getConfigFile($namespace);
+        file_exists($configFilePath) && $config = require($configFilePath);
 
-        return require($configFilePath);    
+        return $config;
     }
 
     /**
@@ -104,10 +106,10 @@ class ApolloConfig
      *                                   ]
      * @return array
      */
-    public static function parseConfig($originConfig)
+    public static function parseConfig(array $originConfig) : array
     {
         if (empty($originConfig) || !is_array($originConfig)) {
-            return false;
+            return [];
         }
         
         $newConfig = [];
