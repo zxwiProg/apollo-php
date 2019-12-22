@@ -23,12 +23,12 @@ composer require iprog/apollo-php
 
 ```php
 $config = [
-    'serverUrl'     => 'http://172.17.18.211:38080',       // apollo的服务器地址
-    'appId'         => 'event-analysis-1',                 // apollo上的appid
-    'cluster'       => 'default',                          // apollo上的cluster
-    'namespaces'    => ['mysql', 'redis'],                 // apollo上的命名空间
-    'configPath'    => '/mnt/d/apollo-php/config',         // php应用的配置文件目录
-    'app_log_path'  => '/var/www/optopus/log',             // php应用的日志文件目录
+    'apollo_server_url'  => 'http://172.17.18.211:38080',       // apollo的服务器地址
+    'apollo_app_id'      => 'event-analysis-1',                 // apollo上的appid
+    'apollo_cluster'     => 'default',                          // apollo上的cluster
+    'apollo_namespaces'  => ['mysql', 'redis'],                 // apollo上的命名空间
+    'app_config_path'    => '/mnt/d/apollo-php/config',         // php应用的配置文件目录
+    'app_log_path'       => '/var/www/optopus/log',             // php应用的日志文件目录
 ];
 ```
 
