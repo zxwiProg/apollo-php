@@ -37,7 +37,7 @@ class ApolloConfig
         $startFunc = $isWin ? '$apollo->winStart();' : '$apollo->start();';
 
         $code  = '<?php' . PHP_EOL . PHP_EOL;
-        $code .= 'require "' . rtrim($vendorPath, '/'). '/vendor/autoload.php";' . PHP_EOL . PHP_EOL;
+        $code .= 'require "' . rtrim($vendorPath, '/'). '/autoload.php";' . PHP_EOL . PHP_EOL;
         $code .= 'ini_set("memory_limit", "128M");' . PHP_EOL;
         $code .= 'ini_set("log_errors", 1);' . PHP_EOL;
         $code .= 'ini_set("error_log", "' . $appLogPath . '");' . PHP_EOL . PHP_EOL;

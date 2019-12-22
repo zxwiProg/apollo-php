@@ -36,10 +36,10 @@ $config = [
 
 ```php
 // 这里先加载vendor的自动加载文件
-require '/app/xxx/vendor/autoload.php';                
+require '/var/www/demo/vendor/autoload.php';                
 
 // 用上面的配置并启动获取脚本（第2个参数为vendor所在目录，第3个参数为php的cli的指令位置）
-ApolloPhp\ApolloConfig::listen($config, '/var/www/demo', '/usr/bin/php');
+ApolloPhp\ApolloConfig::listen($config, '/var/www/demo/vendor', '/usr/bin/php');
 ```
 
 3、在其它地方获取配置：
