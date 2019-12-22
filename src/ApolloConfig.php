@@ -105,12 +105,12 @@ class ApolloConfig
      * 解析apollo返回的配置
      * @param array   $originConfig      配置信息
      *                                   [
-     *                                      'mysql.test.host'       => '172.0.0.1',
-	 *                                      'mysql.test.mysql.port' => 22,
-	 *                                      'mysql.prod.host'       => '172.0.0.1',
-	 *                                      'mysql.prod.port'       => 22,
-     *                                      'mysql.dev.host'        => '172.0.0.1',
-	 *                                      'mysql.dev.port'        => 22,
+     *                                      'mysql.test.host' => '172.0.0.1',
+	 *                                      'mysql.test.port' => 22,
+	 *                                      'mysql.prod.host' => '172.0.0.1',
+	 *                                      'mysql.prod.port' => 22,
+     *                                      'mysql.dev.host'  => '172.0.0.1',
+	 *                                      'mysql.dev.port'  => 22,
      *                                   ]
      * @return array
      */
