@@ -9,7 +9,7 @@ namespace ApolloPhp;
  */
 class ApolloConfig
 {
-    const APOLLO_AUTO_SCRIPT_FILENAME = 'apollo_auto_script.lock';
+    const APOLLO_AUTO_SCRIPT_LOCK_FILE = 'apollo_auto_script.lock';
 
     /**
      * 生成启动脚本
@@ -55,7 +55,7 @@ class ApolloConfig
         file_put_contents($apolloScript, $code);
 
         // 启动脚本（windows是死循环，linux是定时任务）
-        $lockFile = $appConfigPath . DIRECTORY_SEPARATOR . self::APOLLO_AUTO_SCRIPT_FILENAME;
+        $lockFile = $appConfigPath . DIRECTORY_SEPARATOR . self::APOLLO_AUTO_SCRIPT_LOCK_FILE;
         if (!file_exists($lockFile)) {
             file_put_contents($lockFile, 1);
             $sh = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
