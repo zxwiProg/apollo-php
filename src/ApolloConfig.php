@@ -59,9 +59,7 @@ class ApolloConfig
         if (!file_exists($lockFile)) {
             file_put_contents($lockFile, 1);
             $sh = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
-            if (!$isWin) {
-                $sh = 'crontab -l > /tmp/conf && echo "* * * * * ' . $sh . '" >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
-            }
+            !$isWin && $sh = 'crontab -l > /tmp/conf && echo "* * * * * {$sh} " >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
             $errMsg = system($sh, $status);
             error_log('[' . date('Y-m-d H:i:s') . '][status：' . $status  . '] apollo脚本运行错误：' . $errMsg);
         }
