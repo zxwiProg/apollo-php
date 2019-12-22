@@ -27,8 +27,8 @@ $config = [
     'apollo_app_id'      => 'event-analysis-1',                 // apollo上的appid
     'apollo_cluster'     => 'default',                          // apollo上的cluster
     'apollo_namespaces'  => ['mysql', 'redis'],                 // apollo上的命名空间
-    'app_config_path'    => '/mnt/d/apollo-php/config',         // php应用的配置文件目录
-    'app_log_path'       => '/var/www/optopus/log',             // php应用的日志文件目录
+    'app_config_path'    => '/var/www/demo/config',             // php应用的配置文件目录
+    'app_log_path'       => '/var/www/demo/log',                // php应用的日志文件目录
 ];
 ```
 
@@ -39,7 +39,7 @@ $config = [
 require '/app/xxx/vendor/autoload.php';                
 
 // 用上面的配置并启动获取脚本（第2个参数为vendor所在目录，第3个参数为php的cli的指令位置）
-ApolloPhp\ApolloConfig::listen($config, '/var/www/app', '/usr/bin/php');
+ApolloPhp\ApolloConfig::listen($config, '/var/www/demo', '/usr/bin/php');
 ```
 
 3、在其它地方获取配置：
