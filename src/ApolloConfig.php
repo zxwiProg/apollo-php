@@ -58,6 +58,14 @@ class ApolloConfig
         $lockFile = $appConfigPath . DIRECTORY_SEPARATOR . self::APOLLO_AUTO_SCRIPT_LOCK_FILE;
         if (!file_exists($lockFile)) {
             file_put_contents($lockFile, 1);
+
+            //第一次先执行一次，获取配置，避免应用没有配置
+            $cluster = $config["apollo_cluster"] ?? 'default';
+            $apollo = new ApolloClient($config);
+            $apollo->setCluster($cluster);
+            $apollo->start();
+
+            // 然后使用脚本，循环获取配置，更新配置
             $sh = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
             !$isWin && $sh = 'crontab -l > /tmp/conf && echo "* * * * * {$sh} " >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
             $errMsg = system($sh, $status);
