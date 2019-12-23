@@ -157,9 +157,9 @@ class ApolloConfig
     /**
      * 返回$expression的美化形式
      * @param   array   $expression   要美化的数组
-     * @return  mixed
+     * @return  string
      */
-    public static function myVarExport(array $expression)
+    public static function myVarExport(array $expression) : string
     {
         $export = var_export($expression, true);
         $export = preg_replace("/^([ ]*)(.*)/m", '$1$1$2', $export);
