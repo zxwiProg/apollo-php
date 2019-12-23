@@ -31,11 +31,18 @@ class ApolloConfig
     {
         $appLogPath = rtrim($config['app_log_path'], '/') . DIRECTORY_SEPARATOR . 'apollo_runtime.log';
         chmod($appLogPath, 0666);
-        
+
         ini_set('log_errors', 1); 
         ini_set('error_log', $appLogPath);
 
-        $code  = '<?php' . PHP_EOL . PHP_EOL;
+        $code  = '<?php' . PHP_EOL;
+        $code .= '/**' . PHP_EOL;
+        $code .= ' * 请不要删除该文件或者移动该文件到其它位置' . PHP_EOL;
+        $code .= ' * 此文件为apollo-php客户端自动生成的定时脚本，请知悉' . PHP_EOL;
+        $code .= ' * ' . PHP_EOL;
+        $code .= ' * @copyright   Copyright(c) 2019' . PHP_EOL;
+        $code .= ' * @author      iProg' . PHP_EOL;
+        $code .= ' */' . PHP_EOL . PHP_EOL;
         $code .= 'require "' . rtrim($vendorPath, '/') . '/autoload.php";' . PHP_EOL . PHP_EOL;
         $code .= 'ini_set("memory_limit", "128M");' . PHP_EOL;
         $code .= 'ini_set("log_errors", 1);' . PHP_EOL;
