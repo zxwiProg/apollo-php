@@ -84,16 +84,40 @@ prod.slave.pwd=#343kdjer$
 
 return [
     'dev' => [
-        'master' => ['host' => '127.0.0.1', 'port' => '6379', 'pwd' => '#343kdjer$'],
-        'slave'  => ['host' => '127.0.0.1', 'port' => '6379', 'pwd' => '#343kdjer$'],
+        'master' => [
+            'host' => '127.0.0.1',
+            'port' => '6379',
+            'pwd' => '#343kdjer$'
+        ],
+        'slave'  => [
+            'host' => '127.0.0.1',
+            'port' => '6379',
+            'pwd' => '#343kdjer$'
+        ],
     ],
     'test' => [
-        'master' => ['host' => '127.0.0.1', 'port' => '6379', 'pwd' => '#343kdjer$'],
-        'slave'  => ['host' => '127.0.0.1', 'port' => '6379', 'pwd' => '#343kdjer$'],
+        'master' => [
+            'host' => '127.0.0.1',
+            'port' => '6379',
+            'pwd' => '#343kdjer$'
+        ],
+        'slave'  => [
+            'host' => '127.0.0.1',
+            'port' => '6379',
+            'pwd' => '#343kdjer$'
+        ],
     ],
     'prod' => [
-        'master' => ['host' => '127.0.0.1', 'port' => '6379', 'pwd' => '#343kdjer$'],
-        'slave'  => ['host' => '127.0.0.1', 'port' => '6379', 'pwd' => '#343kdjer$'],
+        'master' => [
+            'host' => '127.0.0.1',
+            'port' => '6379',
+            'pwd' => '#343kdjer$'
+        ],
+        'slave'  => [
+            'host' => '127.0.0.1',
+            'port' => '6379',
+            'pwd' => '#343kdjer$'
+        ],
     ],
 ];
 
