@@ -77,7 +77,7 @@ prod.slave.host=127.0.0.1
 prod.slave.port=6379
 prod.slave.pwd=#343kdjer$
 ```
-可以从上面的配置看出，键使用点（.）做分割，则php解析后，会形成如下配置文件：
+可以从上面的配置看出，键使用点（.）做分割，则apollo-php解析后，会形成如下配置文件：
 ```php
 <?php
 
