@@ -1,6 +1,8 @@
 # apollo-php
 
 [![Php Version](https://img.shields.io/badge/php-%3E=7.1-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
+[![Apollo-Client License](https://img.shields.io/badge/apollo--client--license-MIT-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
+
 
 
 ## 安装
