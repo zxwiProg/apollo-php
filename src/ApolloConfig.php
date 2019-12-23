@@ -56,28 +56,30 @@ class ApolloConfig
 
         // 启动脚本（windows是死循环，linux是定时任务）
         $lockFile = $appConfigPath . DIRECTORY_SEPARATOR . self::APOLLO_AUTO_SCRIPT_LOCK_FILE;
-        if (!file_exists($lockFile)) {
-            file_put_contents($lockFile, 1);
+        if (file_exists($lockFile)) {
+            return;
+        }
+        
+        file_put_contents($lockFile, 1);
 
-            //第一次先执行一次，获取配置，避免应用没有配置
-            $cluster = $config["apollo_cluster"] ?? 'default';
-            $apollo = new ApolloClient($config);
-            $apollo->setCluster($cluster);
-            $apollo->start();
+        //第一次先执行一次，获取配置，避免应用没有配置
+        $cluster = $config["apollo_cluster"] ?? 'default';
+        $apollo = new ApolloClient($config);
+        $apollo->setCluster($cluster);
+        $apollo->start();
 
-            $appPullInterval = 10;
-            if (isset($config['app_pull_interval']) && in_array($config['app_pull_interval'], self::APP_PULL_INTERVAL_ARRAR)) {
-                $appPullInterval = $config['app_pull_interval'];
-            }
+        $appPullInterval = 10;
+        if (isset($config['app_pull_interval']) && in_array($config['app_pull_interval'], self::APP_PULL_INTERVAL_ARRAR)) {
+            $appPullInterval = $config['app_pull_interval'];
+        }
 
-            $totalCronNum = 60 / $appPullInterval;
-            for ($i = 0; $i < $totalCronNum; $i++) {
-                $sleepSecond = $i * $appPullInterval;
-                $sh = 'sleep ' . $sleepSecond . '; nohup ' . $phpCli . ' ' . $apolloScript . ' >> ' . $appLogPath . ' &';
-                $sh = 'crontab -l > /tmp/conf && echo "* * * * * ' . $sh .' " >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
-                $errMsg = system($sh, $status);
-                $status != 0 && error_log('[' . date('Y-m-d H:i:s') . '][status：' . $status  . '] apollo脚本运行错误：' . $errMsg);
-            }
+        $totalCronNum = 60 / $appPullInterval;
+        for ($i = 0; $i < $totalCronNum; $i++) {
+            $sleepSecond = $i * $appPullInterval;
+            $sh = 'sleep ' . $sleepSecond . '; nohup ' . $phpCli . ' ' . $apolloScript . ' >> ' . $appLogPath . ' &';
+            $sh = 'crontab -l > /tmp/conf && echo "* * * * * ' . $sh .' " >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
+            $errMsg = system($sh, $status);
+            $status != 0 && error_log('[' . date('Y-m-d H:i:s') . '][status：' . $status  . '] apollo脚本运行错误：' . $errMsg);
         }
     }
 
