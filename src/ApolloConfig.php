@@ -35,9 +35,7 @@ class ApolloConfig
         ini_set('error_log', $appLogPath);
 
         $code  = '<?php' . PHP_EOL . PHP_EOL;
-        $code .= 'require "ApolloConfig.php";' . PHP_EOL;
-        $code .= 'require "ApolloClient.php;' . PHP_EOL;
-        $code .= 'require "ApolloCurl.php;' . PHP_EOL . PHP_EOL;
+        $code .= 'require "' . $vendorPath . '/autoload.php";' . PHP_EOL . PHP_EOL;
         $code .= 'ini_set("memory_limit", "128M");' . PHP_EOL;
         $code .= 'ini_set("log_errors", 1);' . PHP_EOL;
         $code .= 'ini_set("error_log", "' . $appLogPath . '");' . PHP_EOL . PHP_EOL;
@@ -59,7 +57,7 @@ class ApolloConfig
         if (file_exists($lockFile)) {
             return;
         }
-        
+
         file_put_contents($lockFile, 1);
 
         //第一次先执行一次，获取配置，避免应用没有配置
