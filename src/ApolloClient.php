@@ -150,7 +150,7 @@ class ApolloClient
         if ($result && is_array($result)) {
             $newConfig = ApolloConfig::parseConfig($result['configurations']);
             $content  = '<?php' . PHP_EOL . PHP_EOL;
-            $content .= 'return '  . var_export($newConfig, true)  . ';' . PHP_EOL . PHP_EOL;
+            $content .= 'return '  . ApolloConfig::myVarExport($newConfig) . ';' . PHP_EOL . PHP_EOL;
             $content .= '?>' . PHP_EOL;
             $configFilePath = $this->getConfigFile($namespace);
             file_put_contents($configFilePath, $content);
@@ -202,7 +202,7 @@ class ApolloClient
             if ($result && is_array($result)) {
                 $newConfig = ApolloConfig::parseConfig($result['configurations']);
                 $content  = '<?php' . PHP_EOL . PHP_EOL;
-                $content .= 'return '  . var_export($newConfig, true)  . ';' . PHP_EOL . PHP_EOL;
+                $content .= 'return '  . ApolloConfig::myVarExport($newConfig) . ';' . PHP_EOL . PHP_EOL;
                 $content .= '?>' . PHP_EOL;
                 $configFilePath = $this->getConfigFile($namespace);
                 file_put_contents($configFilePath, $content);
