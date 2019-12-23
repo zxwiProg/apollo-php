@@ -56,7 +56,7 @@ ApolloPhp\ApolloConfig::get($config, $namespace);
 
 需要说明的是，apollo配置中心的配置以键值对形式存在，所以，为了方便apollo-php在代码层面做解析，apollo-php拟定了一个统一的配置方式，以下举例说明。
 
-比如，现在我们要配置redis的链接参数信息，首先我们需要在apollo配置中心配置了一个redis的namespace，然后在该namespace，可以做如下配置：
+比如，现在我们要配置redis的链接参数信息，首先我们需要在apollo配置中心配置一个redis的namespace，然后在该namespace，可以做如下配置：
 ```php
 dev.master.host=127.0.0.1
 dev.master.port=6379
