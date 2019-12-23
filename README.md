@@ -2,14 +2,14 @@
 
 [![Php Version](https://img.shields.io/badge/php-%3E=7.1-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
 [![Apollo-Client License](https://img.shields.io/badge/apollo--client--license-MIT-blue.svg?maxAge=2592000)](https://secure.php.net/)
-
-
+<br>
 
 ## 安装
 
 ```shell
 composer require iprog/apollo-php
 ```
+<br>
 
 ## 依赖
 
@@ -17,7 +17,6 @@ composer require iprog/apollo-php
 - php-curl扩展
 - linux系统上需启用crontab，执行命令service cron start
 <br>
-
 
 ## 如何使用：
 
@@ -98,7 +97,3 @@ return [
 
 ?>
 ```
-
-
-
-
