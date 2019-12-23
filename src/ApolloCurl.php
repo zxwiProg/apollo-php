@@ -10,14 +10,14 @@ namespace ApolloPhp;
 class ApolloCurl
 {
 	/**
-     * 发起get请求
-     *
-     * @param string  $url       请求地址
-     * @param array   $options   请求选项
-     * @param int     $timeout   超时时间
-     * @param int     $header    设定返回信息中是否包含响应信息头
-     * @return mixed 
-     */
+     	 * 发起get请求
+     	 *
+     	 * @param string  $url       请求地址
+     	 * @param array   $options   请求选项
+     	 * @param int     $timeout   超时时间
+     	 * @param int     $header    设定返回信息中是否包含响应信息头
+     	 * @return mixed 
+     	 */
 	public static function get(string $url, array $options = [], int $timeout = 30, int $header = 0) : array
 	{
 		$ch = curl_init($url);
