@@ -30,7 +30,8 @@ class ApolloConfig
     public static function listen(array $config, string $vendorPath = '', string $phpCli = '') : void
     {
         $appLogPath = rtrim($config['app_log_path'], '/') . DIRECTORY_SEPARATOR . 'apollo_runtime.log';
-
+        chmod($appLogPath, 0666);
+        
         ini_set('log_errors', 1); 
         ini_set('error_log', $appLogPath);
 
@@ -52,7 +53,7 @@ class ApolloConfig
         chmod($apolloScript, 0755);
         file_put_contents($apolloScript, $code);
 
-        // 启动脚本（windows是死循环，linux是定时任务）
+        // 启动脚本
         $lockFile = $appConfigPath . DIRECTORY_SEPARATOR . self::APOLLO_AUTO_SCRIPT_LOCK_FILE;
         if (file_exists($lockFile)) {
             return;
