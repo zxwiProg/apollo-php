@@ -10,7 +10,7 @@ namespace ApolloPhp;
 class ApolloConfig
 {
     const APOLLO_AUTO_SCRIPT_LOCK_FILE = 'apollo_auto_script.lock';
-    const APP_PULL_INTERVAL_ARRAR = [5, 10, 20, 30, 60];
+    const APP_PULL_INTERVAL_ARRAY = [5, 10, 20, 30, 60];
 
     /**
      * 生成启动脚本
@@ -75,7 +75,7 @@ class ApolloConfig
         $apollo->start();
 
         $appPullInterval = 10;
-        if (isset($config['app_pull_interval']) && in_array($config['app_pull_interval'], self::APP_PULL_INTERVAL_ARRAR)) {
+        if (isset($config['app_pull_interval']) && in_array($config['app_pull_interval'], self::APP_PULL_INTERVAL_ARRAY)) {
             $appPullInterval = $config['app_pull_interval'];
         }
 
