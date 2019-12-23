@@ -50,6 +50,7 @@ ApolloPhp\ApolloConfig::listen($config, '/var/www/demo/vendor', '/usr/bin/php');
 $namespace = 'redis';
 ApolloPhp\ApolloConfig::get($config, $namespace);
 ```
+<br>
 
 ## apollo配置中心如何做配置：
 
