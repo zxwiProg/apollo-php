@@ -10,6 +10,7 @@ namespace ApolloPhp;
 class ApolloConfig
 {
     const APOLLO_AUTO_SCRIPT_LOCK_FILE = 'apollo_auto_script.lock';
+    const APP_PULL_INTERVAL_ARRAR = [5, 10, 20, 30, 60];
 
     /**
      * 生成启动脚本
@@ -21,23 +22,22 @@ class ApolloConfig
      *                                  'apollo_namespaces' => ['redis', 'mysql'],
      *                                  'app_config_path'   => '/var/www/optopus/config',
      *                                  'app_log_path'      => '/var/www/optopus/log',
+     *                                  'app_pull_interval' => 10,
      *                             ]
      * @param string  $vendorPath  composer的vendor路径
      * @param string  $phpCli      php的cli路径
      */
     public static function listen(array $config, string $vendorPath = '', string $phpCli = '') : void
     {
-        $isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' ? true : false;
-
         $appLogPath = rtrim($config['app_log_path'], '/') . DIRECTORY_SEPARATOR . 'apollo_runtime.log';
 
         ini_set('log_errors', 1); 
         ini_set('error_log', $appLogPath);
 
-        $startFunc = $isWin ? '$apollo->winStart();' : '$apollo->start();';
-
         $code  = '<?php' . PHP_EOL . PHP_EOL;
-        $code .= 'require "' . rtrim($vendorPath, '/'). '/autoload.php";' . PHP_EOL . PHP_EOL;
+        $code .= 'require "ApolloConfig.php";' . PHP_EOL;
+        $code .= 'require "ApolloClient.php;' . PHP_EOL;
+        $code .= 'require "ApolloCurl.php;' . PHP_EOL . PHP_EOL;
         $code .= 'ini_set("memory_limit", "128M");' . PHP_EOL;
         $code .= 'ini_set("log_errors", 1);' . PHP_EOL;
         $code .= 'ini_set("error_log", "' . $appLogPath . '");' . PHP_EOL . PHP_EOL;
@@ -45,7 +45,7 @@ class ApolloConfig
         $code .= '$apollo = new ApolloPhp\ApolloClient($config);' . PHP_EOL . PHP_EOL;
         $code .= '$cluster = "' . $config["apollo_cluster"] . '";' . PHP_EOL;
         $code .= '$apollo->setCluster($cluster);' . PHP_EOL;
-        $code .= $startFunc . PHP_EOL . PHP_EOL;
+        $code .= '$apollo->start();' . PHP_EOL . PHP_EOL;
         $code .= '?>' . PHP_EOL;
 
         $appConfigPath = rtrim($config['app_config_path'], '/');
@@ -65,11 +65,19 @@ class ApolloConfig
             $apollo->setCluster($cluster);
             $apollo->start();
 
-            // 然后使用脚本，循环获取配置，更新配置
-            $sh = 'nohup ' . $phpCli . ' ' . $appConfigPath . '/' . $apolloScript . ' >/dev/null 2>&1 &';
-            !$isWin && $sh = 'crontab -l > /tmp/conf && echo "* * * * * {$sh} " >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
-            $errMsg = system($sh, $status);
-            error_log('[' . date('Y-m-d H:i:s') . '][status：' . $status  . '] apollo脚本运行错误：' . $errMsg);
+            $appPullInterval = 10;
+            if (isset($config['app_pull_interval']) && in_array($config['app_pull_interval'], self::APP_PULL_INTERVAL_ARRAR)) {
+                $appPullInterval = $config['app_pull_interval'];
+            }
+
+            $totalCronNum = 60 / $appPullInterval;
+            for ($i = 0; $i < $totalCronNum; $i++) {
+                $sleepSecond = $i * $appPullInterval;
+                $sh = 'sleep ' . $sleepSecond . '; nohup ' . $phpCli . ' ' . $apolloScript . ' >> ' . $appLogPath . ' &';
+                $sh = 'crontab -l > /tmp/conf && echo "* * * * * ' . $sh .' " >> /tmp/conf && crontab /tmp/conf && rm -f /tmp/conf';
+                $errMsg = system($sh, $status);
+                $status != 0 && error_log('[' . date('Y-m-d H:i:s') . '][status：' . $status  . '] apollo脚本运行错误：' . $errMsg);
+            }
         }
     }
 
@@ -83,6 +91,7 @@ class ApolloConfig
      *                                  'apollo_namespaces' => ['redis', 'mysql'],
      *                                  'app_config_path'   => '/var/www/optopus/config',
      *                                  'app_log_path'      => '/var/www/optopus/log',
+     *                                  'app_pull_interval' => 10,
      *                             ]
      * @param string  $namespace  apollo的命名空间
      */

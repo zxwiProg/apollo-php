@@ -30,6 +30,7 @@ $config = [
     'apollo_namespaces'  => ['mysql', 'redis'],                 // apollo上的命名空间
     'app_config_path'    => '/var/www/demo/config',             // php应用的配置文件目录
     'app_log_path'       => '/var/www/demo/log',                // php应用的日志文件目录
+    'app_pull_interval'  => 10,                                 // 定时刷新间隔，有5秒，10秒，20秒，30秒，60秒几种选择
 ];
 ```
 
