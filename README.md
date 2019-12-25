@@ -27,7 +27,7 @@ require_once __DIR__ . "/xxx/vendor/autoload.php";
 $config = new ApolloPhp\Popo\Config\ApolloHttpClientConfig();
 $config->setApolloServerUrl("http://172.17.18.211:3880")
     ->setApolloAppId("php-unit-test-case")
-    ->setApolloCluster("DEV")
+    ->setApolloCluster("DEV");
     
 $apolloRedisParam = new ApolloPhp\Popo\ApolloPullParam();
 $apolloRedisParam->setClientIp('127.0.0.1');
@@ -44,8 +44,10 @@ $client = new ApolloPhp\Api\Impl\ApolloHttpClient($config);
 $apolloConfigResult = $client->pullConfigs($apolloPullParams); 
 
 // 这里会将拉取的配置保存在php对应的配置目录里面
-$apolloConfig = new ApolloPhp\Config\Impl\ApolloConfig('var/www/app/config');
-$apolloConfig->parseConfig($apolloConfigResult);
+foreach ($apolloConfigResult as $result) {
+    $apolloConfig = new ApolloPhp\Config\Impl\ApolloConfig('D://config');
+    $apolloConfig->parseConfig($result);
+}
           
 ```
 
