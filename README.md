@@ -29,14 +29,12 @@ $config->setApolloServerUrl("http://172.17.18.211:3880")
     ->setApolloAppId("php-unit-test-case")
     ->setApolloCluster("DEV");
     
-$apolloRedisParam = new ApolloPhp\Popo\ApolloPullParam();
+$apolloRedisParam = new ApolloPhp\Popo\ApolloPullParam('redis');
 $apolloRedisParam->setClientIp('127.0.0.1');
-$apolloRedisParam->setNamespace('redis');
 $apolloRedisParam->setReleaseKey('');  
 
-$apolloMysqlParam = new ApolloPhp\Popo\ApolloPullParam();
+$apolloMysqlParam = new ApolloPhp\Popo\ApolloPullParam('mysql');
 $apolloMysqlParam->setClientIp('127.0.0.1');
-$apolloMysqlParam->setNamespace('mysql');
 $apolloMysqlParam->setReleaseKey(''); 
   
 $apolloPullParams = [$apolloRedisParam, $apolloMysqlParam];
