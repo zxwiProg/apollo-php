@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="test/bootstrap.php" stopOnFailure="false">
+    <testsuites>
+        <testsuite name="tests">
+            <directory suffix="Test.php">test/Cases</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
+
+
+    <logging>
+        <log type="coverage-html" target="cache/report" lowUpperBound="35" highLowerBound="70" showUncoveredFiles="true"/>
+    </logging>
+
+</phpunit>
