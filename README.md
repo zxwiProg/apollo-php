@@ -17,12 +17,44 @@ composer require iprog/apollo-php
 - **PHP 7.1** or later
 <br>
 
+## 如何使用：
+可以起一个定时任务，然后运行如下脚本即可，也可以将如下脚本写在一个死循环里面进行循环拉取，
+具体各个项目可根据自己的情况决定自己的运用方案
+
+```php
+require_once __DIR__ . "/xxx/vendor/autoload.php";
+
+$config = new ApolloPhp\Popo\Config\ApolloHttpClientConfig();
+$config->setApolloServerUrl("http://172.17.18.211:3880")
+    ->setApolloAppId("php-unit-test-case")
+    ->setApolloCluster("DEV")
+    
+$apolloRedisParam = new ApolloPhp\Popo\ApolloPullParam();
+$apolloRedisParam->setClientIp('127.0.0.1');
+$apolloRedisParam->setNamespace('redis');
+$apolloRedisParam->setReleaseKey('');  
+
+$apolloMysqlParam = new ApolloPhp\Popo\ApolloPullParam();
+$apolloMysqlParam->setClientIp('127.0.0.1');
+$apolloMysqlParam->setNamespace('mysql');
+$apolloMysqlParam->setReleaseKey(''); 
+  
+$apolloPullParams = [$apolloRedisParam, $apolloMysqlParam];
+$client = new ApolloPhp\Api\Impl\ApolloHttpClient($config);
+$apolloConfigResult = $client->pullConfigs($apolloPullParams); 
+
+// 这里会将拉取的配置保存在php对应的配置目录里面
+$apolloConfig = new ApolloPhp\Config\Impl\ApolloConfig('var/www/app/config');
+$apolloConfig->parseConfig($apolloConfigResult);
+          
+```
+
 ## apollo配置中心如何做配置：
 
 需要说明的是，apollo配置中心的配置以键值对形式存在，所以，为了方便apollo-php在代码层面做解析，apollo-php拟定了一个统一的配置方式，以下举例说明。
 
 比如，现在我们要配置redis的链接参数信息，首先我们需要在apollo配置中心配置一个redis的namespace，然后在该namespace，可以做如下配置：
-```php
+```txt
 dev.master.host=127.0.0.1
 dev.master.port=6379
 dev.master.pwd=#343kdjer$

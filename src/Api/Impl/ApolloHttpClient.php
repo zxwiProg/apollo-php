@@ -32,16 +32,13 @@ class ApolloHttpClient implements ApolloServerInterface
     /** @var string apollo配置的cluster */
     private $apolloCluster;
     /** @var string php应用的配置目录 */
-    private $appConfigPath;
-    /** @var ParallelHttpClientInterface http客户端 */
+
     private $httpClient;
     /** @var RequestFactoryInterface 请求工厂 */
     private $requestFactory;
     /** @var Array2ClassInterface 数组转类的转换器 */
     private $array2class;
 
-    /** @var ApolloConfigInterface apollo配置解析类 */
-    private $apolloConfig;
 
     /**
      * ApolloHttpClient constructor.
@@ -59,7 +56,6 @@ class ApolloHttpClient implements ApolloServerInterface
         $this->setApolloAppId($clientConfig->getApolloAppId());
         $this->setApolloServerUrl($clientConfig->getApolloServerUrl());
         $this->setApolloCluster($clientConfig->getApolloCluster());
-        $this->setAppConfigPath($clientConfig->getAppConfigPath());
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->array2class = $array2Class;
@@ -104,27 +100,6 @@ class ApolloHttpClient implements ApolloServerInterface
     public function setHttpClient(ParallelHttpClientInterface $httpClient): ApolloHttpClient
     {
         $this->httpClient = $httpClient;
-        return $this;
-    }
-
-    /**
-     * @return ApolloConfigInterface http客户端
-     */
-    public function getApolloConfig(): ApolloConfigInterface
-    {
-        if (!$this->apolloConfig) {
-            $this->setApolloConfig(new ApolloConfig($this->getAppConfigPath()));
-        }
-        return $this->apolloConfig;
-    }
-
-    /**
-     * @param ApolloConfigInterface $apolloConfig apollo配置解析类
-     * @return static 对象本身
-     */
-    public function setApolloConfig(ApolloConfigInterface $apolloConfig): ApolloHttpClient
-    {
-        $this->apolloConfig = $apolloConfig;
         return $this;
     }
 
@@ -182,24 +157,6 @@ class ApolloHttpClient implements ApolloServerInterface
     public function setApolloServerUrl(string $apolloServerUrl): ApolloHttpClient
     {
         $this->apolloServerUrl = rtrim($apolloServerUrl, '/');
-        return $this;
-    }
-
-    /**
-     * @return string php应用的配置目录
-     */
-    public function getAppConfigPath(): string
-    {
-        return $this->appConfigPath;
-    }
-
-    /**
-     * @param string $appConfigPath php应用的配置目录
-     * @return static 对象本身
-     */
-    public function setAppConfigPath(string $appConfigPath): ApolloHttpClient
-    {
-        $this->appConfigPath = $appConfigPath;
         return $this;
     }
 
@@ -272,10 +229,7 @@ class ApolloHttpClient implements ApolloServerInterface
                 $body = json_decode(strval($response->getBody()), true);
                 /** @var PullConfigResult $result */
                 $result = $this->getArray2class()->convert($body, PullConfigResult::class);
-                $apolloConfigResult = $result->setStatus(PullStatus::SUCCESS());
-                $apolloConfig = $this->getApolloConfig();
-                $apolloConfig->parseConfig($apolloConfigResult);
-                return $apolloConfigResult;
+                return $result->setStatus(PullStatus::SUCCESS());
             case 304:
                 return new PullConfigResult(PullStatus::NOT_MODIFY());
             default:
